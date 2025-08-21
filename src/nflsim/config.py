@@ -1,10 +1,11 @@
 from pydantic import BaseModel
-from typing import List
+
 
 class DataConfig(BaseModel):
-    seasons: List[int]
+    seasons: list[int]
     processed_path: str
     sample_plays: int | None = None
+
 
 class ModelConfig(BaseModel):
     d_model: int = 256
@@ -12,6 +13,7 @@ class ModelConfig(BaseModel):
     n_heads: int = 8
     dropout: float = 0.2
     context_k: int = 6
+
 
 class TrainConfig(BaseModel):
     batch_size: int = 256
@@ -22,10 +24,12 @@ class TrainConfig(BaseModel):
     max_steps: int = 8000
     teacher_forcing_final: float = 0.6
 
+
 class DecodeConfig(BaseModel):
     top_p: float = 0.9
     max_plays_per_drive: int = 25
     max_drives_per_game: int = 24
+
 
 class FullConfig(BaseModel):
     seed: int = 1337

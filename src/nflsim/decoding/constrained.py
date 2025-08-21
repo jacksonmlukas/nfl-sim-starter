@@ -1,6 +1,12 @@
 import numpy as np
 
-def apply_masks(logits: dict[str, np.ndarray], masks: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+
+def apply_masks(
+    logits: dict[str, np.ndarray], masks: dict[str, np.ndarray]
+) -> dict[str, np.ndarray]:
+    """
+    For each head, set illegal-logit positions to -inf based on boolean masks.
+    """
     out = {}
     for head, lg in logits.items():
         m = masks.get(head)

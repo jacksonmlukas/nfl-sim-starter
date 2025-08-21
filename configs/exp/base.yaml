@@ -8,5 +8,3 @@ model:
   n_heads: 8
 decoding:
   top_p: 0.9
-  proe_shift: 0.0
-  fourth_down_aggr: 1.0
