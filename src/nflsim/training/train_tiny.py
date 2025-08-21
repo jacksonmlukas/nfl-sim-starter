@@ -1,5 +1,6 @@
 # mypy: ignore-errors
 from __future__ import annotations
+from nflsim.constants import (THIRD_AND_LONG_YTG, SECOND_AND_LONG_YTG, FIRST_AND_TEN_YTG, SHORT_YTG, SPIKE_CUTOFF_S, RED_ZONE_YARD, GOAL_TO_GO_YARD, RUN_PLAY_SECONDS, PASS_PLAY_SECONDS)
 
 import argparse
 import json

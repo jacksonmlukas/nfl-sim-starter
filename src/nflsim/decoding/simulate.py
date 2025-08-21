@@ -1,5 +1,6 @@
 # mypy: ignore-errors
 from __future__ import annotations
+from nflsim.constants import (THIRD_AND_LONG_YTG, SECOND_AND_LONG_YTG, FIRST_AND_TEN_YTG, SHORT_YTG, SPIKE_CUTOFF_S, RED_ZONE_YARD, GOAL_TO_GO_YARD, RUN_PLAY_SECONDS, PASS_PLAY_SECONDS)
 
 import argparse
 import json
@@ -158,7 +159,7 @@ def main():
         temp_buf = deque([args.temp_bucket] * K, maxlen=K)
         wind_buf = deque([args.wind_bucket] * K, maxlen=K)
         g2g_buf = deque([0] * K, maxlen=K)
-        rz_buf = deque([int(s.yardline_100 <= 20)] * K, maxlen=K)
+        rz_buf = deque([int(s.yardline_100 <= RED_ZONE_YARD)] * K, maxlen=K)
 
         while s.game_seconds_remaining > 0 and drives < 24:
             legal = legal_play_types(s)
@@ -196,13 +197,13 @@ def main():
             if s.down == 3 and s.ydstogo >= 7:
                 logits[PASS] += 1.0
                 logits[RUN] -= 0.3
-            if s.down == 2 and s.ydstogo >= 8:
+            if s.down == 2 and s.ydstogo >= SECOND_AND_LONG_YTG:
                 logits[PASS] += 0.3
-            if s.down == 1 and s.ydstogo == 10:
+            if s.down == 1 and s.ydstogo == FIRST_AND_TEN_YTG:
                 logits[PASS] += 0.2
-            if s.ydstogo <= 2:
+            if s.ydstogo <= SHORT_YTG:
                 logits[RUN] += 0.2
-            if s.game_seconds_remaining > 60:
+            if s.game_seconds_remaining > SPIKE_CUTOFF_S:
                 logits[SPIKE] -= 1.0
 
             pt_idx = top_p_sample(logits, legal, args.top_p)
@@ -244,7 +245,7 @@ def main():
 
             # clock & clamp
             s.game_seconds_remaining = max(
-                0, s.game_seconds_remaining - (38 if play_type in ("run", "kneel") else 28)
+                0, s.game_seconds_remaining - (RUN_PLAY_SECONDS if play_type in ("run","kneel") else PASS_PLAY_SECONDS)
             )
             s = clamp_state(s)
 
@@ -263,8 +264,8 @@ def main():
             surface_buf.append(surface_buf[-1])
             temp_buf.append(temp_buf[-1])
             wind_buf.append(wind_buf[-1])
-            g2g_buf.append(int((s.yardline_100 <= 10) and (s.ydstogo >= s.yardline_100)))
-            rz_buf.append(int(s.yardline_100 <= 20))
+            g2g_buf.append(int((s.yardline_100 <= GOAL_TO_GO_YARD) and (s.ydstogo >= s.yardline_100)))
+            rz_buf.append(int(s.yardline_100 <= RED_ZONE_YARD))
 
             rows.append(
                 {

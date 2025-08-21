@@ -15,5 +15,5 @@ def test_e2e_random_policy_invariants():
         s = fsm.apply_outcome(
             s, yards=int(rng.integers(-3, 8)), turnover=False, score_delta=0, clock_off=5
         )
-        assert 0 <= s.yardline <= 100
-        assert 0 <= s.clock_bin
+        assert s.yardline >= 0 and s.yardline <= 100
+        assert s.clock_bin >= 0
