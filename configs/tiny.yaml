@@ -1,0 +1,24 @@
+# Tiny Mac-friendly training config
+seed: 1337
+data:
+  seasons: [2019, 2020, 2021, 2022, 2023, 2024]
+  processed_path: data/processed/plays_canonical.parquet
+  sample_plays: 120000   # reduce if slow
+model:
+  d_model: 384
+  n_layers: 6
+  n_heads: 8
+  dropout: 0.2
+  context_k: 6
+train:
+  batch_size: 256
+  grad_accum: 4
+  lr: 3e-4
+  weight_decay: 0.01
+  warmup_steps: 2000
+  max_steps: 12000
+  teacher_forcing_final: 0.6   # scheduled sampling target
+decode:
+  top_p: 0.9
+  max_plays_per_drive: 25
+  max_drives_per_game: 24
