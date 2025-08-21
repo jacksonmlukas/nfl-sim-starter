@@ -1,42 +1,35 @@
-# Minimal football rules FSM (expand later)
 from __future__ import annotations
-from dataclasses import dataclass
+import numpy as np
+from dataclasses import replace
+from nflsim.state import GameState
 
-@dataclass
-class State:
-    qtr: int
-    game_seconds_remaining: int
-    down: int
-    ydstogo: int
-    yardline_100: int
-    posteam_timeouts: int
-    defteam_timeouts: int
-    possession: str  # 'home'/'away'
-    score_home: int
-    score_away: int
+PLAY_TYPES = ("run","pass","punt","fg","spike","kneel","ko","onside","penalty")
 
-PLAY_TYPES = ['run','pass','punt','field_goal','spike','kneel']
+class RulesFSM:
+    def legal_actions(self, s: GameState) -> dict[str, np.ndarray]:
+        mask_pt = np.zeros(len(PLAY_TYPES), dtype=bool)
+        if s.down == 4 and s.distance > 1:
+            mask_pt[[0,1,2,3]] = True  # run, pass, punt, fg
+        else:
+            mask_pt[[0,1,4,5]] = True  # run, pass, spike, kneel
+        return {"play_type": mask_pt}
 
-def legal_play_types(s: State) -> list[str]:
-    legal = []
-    # Basic offense options
-    legal += ['run','pass']
-    # 4th down: allow special teams
-    if s.down == 4:
-        # FG only if within ~60 yard FG (yardline_100 <= 43 from end zone)
-        if s.yardline_100 <= 43:
-            legal.append('field_goal')
-        legal.append('punt')
-    # End-game mechanics (very simplified)
-    if s.game_seconds_remaining < 120 and s.down in (1,2,3) and s.yardline_100 < 90:
-        legal.append('spike')
-    if s.game_seconds_remaining < 120 and s.down in (1,2,3) and s.yardline_100 <= 5:
-        legal.append('kneel')
-    return sorted(set(legal))
-
-def clamp_state(s: State) -> State:
-    s.down = max(1, min(4, s.down))
-    s.yardline_100 = max(0, min(100, s.yardline_100))
-    s.ydstogo = max(1, min(99, s.ydstogo))
-    s.game_seconds_remaining = max(0, s.game_seconds_remaining)
-    return s
+    def apply_outcome(self, s: GameState, *, yards: int, turnover: bool,
+                      score_delta: int, clock_off: int) -> GameState:
+        yl = max(0, min(100, s.yardline + yards))
+        made_line = yards >= s.distance
+        if turnover:
+            ns = replace(s, offense=s.defense, defense=s.offense,
+                         possession_index=s.possession_index + 1,
+                         down=1, distance=10, yardline=100-yl)
+        else:
+            if made_line:
+                ns = replace(s, down=1, distance=10, yardline=yl)
+            else:
+                ns = replace(s, down=min(4, s.down + 1),
+                             distance=max(1, s.distance - yards), yardline=yl)
+        nb = max(0, s.clock_bin - clock_off)
+        ns = replace(ns, clock_bin=nb, score_off=s.score_off + score_delta)
+        if ns.clock_bin < 0:
+            raise ValueError("Clock went negative")
+        return ns
