@@ -1,39 +1,37 @@
+from __future__ import annotations
 from pydantic import BaseModel
+from typing import List
+import yaml
 
-
-class DataConfig(BaseModel):
-    seasons: list[int]
-    processed_path: str
-    sample_plays: int | None = None
-
-
-class ModelConfig(BaseModel):
-    d_model: int = 256
-    n_layers: int = 4
+class ModelCfg(BaseModel):
+    d_model: int = 512
+    n_layers: int = 8
     n_heads: int = 8
     dropout: float = 0.2
-    context_k: int = 6
 
-
-class TrainConfig(BaseModel):
-    batch_size: int = 256
-    grad_accum: int = 4
+class TrainCfg(BaseModel):
     lr: float = 3e-4
-    weight_decay: float = 0.01
-    warmup_steps: int = 2000
-    max_steps: int = 8000
-    teacher_forcing_final: float = 0.6
+    weight_decay: float = 1e-2
+    max_steps: int = 10_000
 
+class DataCfg(BaseModel):
+    path: str = "data/"
+    years: List[int] = [1999, 2024]
 
-class DecodeConfig(BaseModel):
+class DecodingCfg(BaseModel):
     top_p: float = 0.9
-    max_plays_per_drive: int = 25
-    max_drives_per_game: int = 24
-
+    proe_shift: float = 0.0
+    fourth_down_aggr: float = 1.0
+    tempo: float = 1.0
 
 class FullConfig(BaseModel):
-    seed: int = 1337
-    data: DataConfig
-    model: ModelConfig
-    train: TrainConfig
-    decode: DecodeConfig
+    seed: int = 42
+    data: DataCfg = DataCfg()
+    model: ModelCfg = ModelCfg()
+    train: TrainCfg = TrainCfg()
+    decoding: DecodingCfg = DecodingCfg()
+
+def load_config(path: str) -> FullConfig:
+    with open(path, "r") as f:
+        raw = yaml.safe_load(f) or {}
+    return FullConfig.model_validate(raw)

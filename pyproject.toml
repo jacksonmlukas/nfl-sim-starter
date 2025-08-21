@@ -27,3 +27,12 @@ exclude = "(^notebooks/|^data/|^datasets/|^runs/)"
 minversion = "7.0"
 addopts = "-q --maxfail=1"
 testpaths = ["tests"]
+
+[tool.ruff.lint]
+select = ["E","F","I","UP","B","SIM","PL","RUF"]
+ignore = []
+per-file-ignores = {
+    "src/nflsim/decoding/simulate.py" = ["E701","E702","E501","PLR2004"],
+    "src/nflsim/eval/eval_report.py" = ["E701","E702","E501"],
+    "src/nflsim/training/train_tiny.py" = ["E701","E702","E501","PLR0913","PLR0915"],
+}

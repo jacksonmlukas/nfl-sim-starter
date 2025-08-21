@@ -110,7 +110,8 @@ def main():
     # load vocab (if exists) to keep ids consistent
     try:
         json.load(open("runs/vocab.json"))
-        # we'll just trust provided codes or 0/1; vocab primarily prevents train/sim drift
+        # we'll just trust provided codes or 0/1
+                vocab primarily prevents train/sim drift
     except Exception:
         pass
 
@@ -217,12 +218,12 @@ def main():
 
             # state update
             if play_type in ("run", "pass"):
-                s.yardline_100 = max(0, s.yardline_100 - int(round(yards)))
+                s.yardline_100 = max(0, s.yardline_100 - yards)
                 if yards >= s.ydstogo:
                     s.down, s.ydstogo = 1, 10
                 else:
                     s.down = min(4, s.down + 1)
-                    s.ydstogo = max(1, s.ydstogo - int(round(yards)))
+                    s.ydstogo = max(1, s.ydstogo - yards)
             elif play_type == "punt":
                 new_yard_old_offense = s.yardline_100 + 42
                 flip_possession(s, new_yard_old_offense)
